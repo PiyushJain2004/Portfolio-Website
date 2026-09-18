@@ -45,6 +45,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:#55525e;font:500 8p
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 
 @media(prefers-reduced-motion:no-preference){
+  .is-scrolling body:before,
+  .is-scrolling .noise{opacity:0}
   .is-scrolling .cursor-glow{opacity:0}
   .is-scrolling .hero-orb,
   .is-scrolling .ai-core,
