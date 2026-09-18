@@ -146,13 +146,26 @@ function ProjectVisual({ project }: { project: Project }) {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
-  const [scrolled, setScrolled] = useState(false);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const nav = document.querySelector<HTMLElement>(".nav");
+    let scrollRaf = 0;
+    let scrollStopTimeout = 0;
+    const onScroll = () => {
+      document.documentElement.classList.add("is-scrolling");
+      window.clearTimeout(scrollStopTimeout);
+      scrollStopTimeout = window.setTimeout(() => {
+        document.documentElement.classList.remove("is-scrolling");
+      }, 120);
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        nav?.classList.toggle("nav-scrolled", window.scrollY > 20);
+        scrollRaf = 0;
+      });
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
 
     // Throttle pointer tracking to one update per animation frame instead of
@@ -186,7 +199,10 @@ function App() {
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollStopTimeout);
+      document.documentElement.classList.remove("is-scrolling");
       window.removeEventListener("pointermove", onPointerMove);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
       if (rafId) cancelAnimationFrame(rafId);
       io.disconnect();
     };
@@ -257,7 +273,7 @@ function App() {
     <div className={`site ${activeProject ? "project-modal-open" : ""}`}>
       <div className="noise" />
       <div className="cursor-glow" />
-      <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
+      <header className="nav">
         <div className="container nav-inner">
           <button className="brand" onClick={() => go("top")}><span className="brand-mark">PJ</span><span>Piyush Jain</span></button>
           <nav className={`nav-links ${menuOpen ? "nav-open" : ""}`}>
