@@ -152,38 +152,19 @@ function App() {
 
   useEffect(() => {
     const nav = document.querySelector<HTMLElement>(".nav");
-    let scrollRaf = 0;
-    let scrollStopTimeout = 0;
+    let raf = 0;
+
     const onScroll = () => {
-      document.documentElement.classList.add("is-scrolling");
-      window.clearTimeout(scrollStopTimeout);
-      scrollStopTimeout = window.setTimeout(() => {
-        document.documentElement.classList.remove("is-scrolling");
-      }, 120);
-      if (scrollRaf) return;
-      scrollRaf = requestAnimationFrame(() => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
         nav?.classList.toggle("nav-scrolled", window.scrollY > 20);
-        scrollRaf = 0;
+        raf = 0;
       });
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
 
-    // Throttle pointer tracking to one update per animation frame instead of
-    // firing on every raw pointermove event — this was a real source of jank.
-    let rafId = 0;
-    const onPointerMove = (event: PointerEvent) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        document.documentElement.style.setProperty("--mx", `${event.clientX - 140}px`);
-        document.documentElement.style.setProperty("--my", `${event.clientY - 140}px`);
-        rafId = 0;
-      });
-    };
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-
-    // Use IntersectionObserver instead of a scroll-driven getBoundingClientRect
-    // loop — the old approach forced a synchronous layout read on every scroll
-    // tick for every .reveal element on the page, which is what caused the lag.
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -193,17 +174,14 @@ function App() {
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -10% 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -8% 0px" }
     );
+
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(scrollStopTimeout);
-      document.documentElement.classList.remove("is-scrolling");
-      window.removeEventListener("pointermove", onPointerMove);
-      if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      if (rafId) cancelAnimationFrame(rafId);
+      if (raf) cancelAnimationFrame(raf);
       io.disconnect();
     };
   }, []);

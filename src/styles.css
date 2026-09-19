@@ -133,3 +133,76 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:#55525e;font:500 8p
 }
 @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modalPanelIn { from { opacity: 0; transform: translateY(8px) scale(.992); } to { opacity: 1; transform: none; } }
+
+/* --------------------------------------------------------------------------
+   Scroll-performance pass
+   Keeps the existing visual language, but removes paint-heavy effects from
+   the scrolling path. The browser can now scroll mostly compositor-only.
+   -------------------------------------------------------------------------- */
+
+/* Avoid a full-page procedural texture layer being repainted during scroll. */
+.noise { display: none; }
+
+/* Pointer glow is decorative only; removing it eliminates a fixed blurred layer. */
+.cursor-glow { display: none; }
+
+/* Large blurred blobs are replaced by their existing soft gradients. */
+.blob { filter: none; }
+
+/* Backdrop blur is one of the most expensive effects on low/mid-range GPUs. */
+.btn-glass,
+.code-card,
+.ai-steps,
+.nav-links {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Keep the same translucent appearance without asking the browser to blur pixels behind it. */
+.btn-glass { background: rgba(255,255,255,.055); }
+.code-card { background: rgba(12,12,18,.96); }
+.ai-steps { background: rgba(17,16,25,.94); }
+
+/* Don't promote large interactive surfaces permanently. */
+.featured,
+.modal,
+.modal-backdrop { will-change: auto; }
+
+/* Isolate complex visual cards so their paints don't invalidate neighbouring sections. */
+.featured-visual,
+.project-card .visual,
+.hero-visual,
+.skill-card {
+  contain: layout paint;
+}
+
+/* Decorative skill glows don't need a live blur filter. */
+.skill-card:after {
+  filter: none;
+  opacity: .055;
+}
+
+/* Infinite animations are deliberately limited to cheap transform/opacity work. */
+.code-card code strong { animation-duration: 1.6s; }
+
+/* Reduce the amount of work performed by reveal transitions while preserving the effect. */
+.reveal {
+  transition-duration: .45s;
+  transition-property: opacity, transform;
+}
+
+/* The hero orb remains animated, but its animation is isolated to one compositor layer. */
+.hero-orb {
+  contain: layout paint;
+  will-change: transform;
+}
+
+/* Never blur the modal backdrop; opening the case study stays responsive. */
+.modal-backdrop {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-orb { animation-duration: 9s; }
+}
